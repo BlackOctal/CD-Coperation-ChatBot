@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CD Corporation Law Services - AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .company-logo {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .company-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 15px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 12px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #e74c3c;
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.online {
+            background: #27ae60;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .message.user .message-avatar {
+            background: #3498db;
+        }
+
+        .message.bot .message-avatar {
+            background: #2c3e50;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #3498db;
+            color: white;
+            border-bottom-right-radius: 8px;
+        }
+
+        .message.bot .message-content {
+            background: white;
+            color: #2c3e50;
+            border-bottom-left-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message-time {
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 14px;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s ease;
+            max-height: 100px;
+            min-height: 50px;
+        }
+
+        .chat-input:focus {
+            border-color: #3498db;
+        }
+
+        .send-button {
+            width: 50px;
+            height: 50px;
+            border: none;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: white;
+            border-radius: 20px;
+            border-bottom-left-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            max-width: 70%;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #bdc3c7;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typing {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+
+        .welcome-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .config-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .config-form {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .config-form h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .config-form input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .config-form input:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+
+        .config-form button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .config-form button:hover {
+            transform: translateY(-2px);
+        }
+
+        .config-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+            }
+            
+            .connection-status {
+                position: static;
+                margin-top: 15px;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="connection-status" id="connectionStatus">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+            <div class="company-logo">CD Corporation Law Services</div>
+            <div class="company-subtitle">AI Legal Education Assistant</div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="welcome-message">
+                <div class="welcome-title">Welcome to CD Corporation Law Services AI Assistant</div>
+                <p>I'm here to help staff members with legal education and guidance. Feel free to ask any questions!</p>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    class="chat-input" 
+                    id="chatInput" 
+                    placeholder="Type your legal question here..."
+                    rows="1"
+                    disabled
+                ></textarea>
+                <button class="send-button" id="sendButton" disabled>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22,2 15,22 11,13 2,9"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Modal -->
+    <div class="config-modal" id="configModal" style="display: none;">
+        <div class="config-form">
+            <h2>🔧 Configure Azure AI Services</h2>
+            <div class="config-info">
+                <strong>First-time setup:</strong> Enter your Azure OpenAI credentials. These will be stored securely in your browser's local storage.
+            </div>
+            <form id="configForm">
+                <input type="text" id="apiKey" placeholder="Azure API Key" required>
+                <input type="text" id="endpoint" placeholder="Azure Endpoint (https://your-resource.openai.azure.com/)" required>
+                <input type="text" id="apiUrl" placeholder="Azure API URL (optional)" >
+                <button type="submit">💾 Save Configuration</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        class EnvironmentConfig {
+            static getConfig() {
+                // Try to load from environment variables (if available)
+                const envConfig = {
+                    apiKey: this.getEnvVar('AZURE_API_KEY'),
+                    endpoint: this.getEnvVar('AZURE_ENDPOINT'),
+                    apiUrl: this.getEnvVar('AZURE_API_URL')
+                };
+
+                // If environment variables are available, use them
+                if (envConfig.apiKey && envConfig.endpoint) {
+                    return envConfig;
+                }
+
+                // Otherwise, try to load from localStorage
+                const storedConfig = localStorage.getItem('azureConfig');
+                if (storedConfig) {
+                    return JSON.parse(storedConfig);
+                }
+
+                // No configuration found
+                return null;
+            }
+
+            static getEnvVar(name) {
+                // In a real deployment, these would come from server-side environment variables
+                // For client-side, we can check if they were injected during build
+                return window.ENV && window.ENV[name] || null;
+            }
+
+            static saveConfig(config) {
+                localStorage.setItem('azureConfig', JSON.stringify(config));
+            }
+
+            static clearConfig() {
+                localStorage.removeItem('azureConfig');
+            }
+        }
+
+        class ChatInterface {
+            constructor() {
+                this.config = null;
+                this.isOnline = false;
+                this.conversationHistory = [];
+                
+                this.initializeElements();
+                this.loadConfiguration();
+            }
+
+            initializeElements() {
+                this.chatMessages = document.getElementById('chatMessages');
+                this.chatInput = document.getElementById('chatInput');
+                this.sendButton = document.getElementById('sendButton');
+                this.statusIndicator = document.getElementById('statusIndicator');
+                this.statusText = document.getElementById('statusText');
+                this.configModal = document.getElementById('configModal');
+                this.configForm = document.getElementById('configForm');
+            }
+
+            loadConfiguration() {
+                this.config = EnvironmentConfig.getConfig();
+                
+                if (!this.config || !this.config.apiKey || !this.config.endpoint) {
+                    this.showConfigModal();
+                } else {
+                    this.initializeChat();
+                }
+            }
+
+            showConfigModal() {
+                this.configModal.style.display = 'flex';
+                this.setupConfigForm();
+            }
+
+            hideConfigModal() {
+                this.configModal.style.display = 'none';
+            }
+
+            setupConfigForm() {
+                this.configForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    
+                    const config = {
+                        apiKey: document.getElementById('apiKey').value.trim(),
+                        endpoint: document.getElementById('endpoint').value.trim(),
+                        apiUrl: document.getElementById('apiUrl').value.trim()
+                    };
+
+                    // Validate configuration
+                    if (!config.apiKey || !config.endpoint) {
+                        alert('Please fill in at least the API Key and Endpoint fields.');
+                        return;
+                    }
+
+                    // Ensure endpoint has trailing slash
+                    if (!config.endpoint.endsWith('/')) {
+                        config.endpoint += '/';
+                    }
+
+                    // Save configuration
+                    EnvironmentConfig.saveConfig(config);
+                    this.config = config;
+                    
+                    this.hideConfigModal();
+                    this.initializeChat();
+                });
+            }
+
+            initializeChat() {
+                this.apiKey = this.config.apiKey;
+                this.endpoint = this.config.endpoint;
+                this.apiUrl = this.config.apiUrl;
+
+                this.setupEventListeners();
+                this.checkConnection();
+                this.setupAutoResize();
+            }
+
+            setupEventListeners() {
+                this.sendButton.addEventListener('click', () => this.sendMessage());
+                this.chatInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Add settings button to header for reconfiguration
+                const settingsBtn = document.createElement('button');
+                settingsBtn.innerHTML = '⚙️';
+                settingsBtn.style.cssText = `
+                    position: absolute;
+                    top: 20px;
+                    left: 20px;
+                    background: rgba(255,255,255,0.1);
+                    border: none;
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 20px;
+                    cursor: pointer;
+                    font-size: 14px;
+                `;
+                settingsBtn.addEventListener('click', () => this.showConfigModal());
+                document.querySelector('.chat-header').appendChild(settingsBtn);
+            }
+
+            setupAutoResize() {
+                this.chatInput.addEventListener('input', () => {
+                    this.chatInput.style.height = '50px';
+                    this.chatInput.style.height = Math.min(this.chatInput.scrollHeight, 100) + 'px';
+                });
+            }
+
+            async checkConnection() {
+                try {
+                    this.updateStatus('Checking connection...', false);
+                    
+                    // Simple connectivity test
+                    const testResponse = await fetch(this.endpoint, {
+                        method: 'HEAD',
+                        mode: 'no-cors'
+                    });
+                    
+                    this.setOnlineStatus(true);
+                    this.updateStatus('Online', true);
+                    
+                } catch (error) {
+                    console.error('Connection test failed:', error);
+                    this.setOnlineStatus(true);
+                    this.updateStatus('Online (Testing)', true);
+                }
+                
+                setTimeout(() => this.checkConnection(), 30000);
+            }
+
+            setOnlineStatus(isOnline) {
+                this.isOnline = isOnline;
+                this.chatInput.disabled = !isOnline;
+                this.sendButton.disabled = !isOnline;
+                
+                if (isOnline) {
+                    this.chatInput.placeholder = "Type your legal question here...";
+                } else {
+                    this.chatInput.placeholder = "Service offline - please check configuration...";
+                }
+            }
+
+            updateStatus(text, isOnline) {
+                this.statusText.textContent = text;
+                if (isOnline) {
+                    this.statusIndicator.classList.add('online');
+                } else {
+                    this.statusIndicator.classList.remove('online');
+                }
+            }
+
+            async sendMessage() {
+                const message = this.chatInput.value.trim();
+                if (!message || !this.isOnline) return;
+
+                this.addMessage(message, 'user');
+                this.chatInput.value = '';
+                this.chatInput.style.height = '50px';
+
+                this.showTypingIndicator();
+
+                try {
+                    const response = await this.callAzureOpenAI(message);
+                    this.hideTypingIndicator();
+                    this.addMessage(response, 'bot');
+                } catch (error) {
+                    this.hideTypingIndicator();
+                    this.addMessage('I apologize, but I encountered an error processing your request. Please try again or check your configuration.', 'bot');
+                    console.error('API call failed:', error);
+                }
+            }
+
+            async callAzureOpenAI(message) {
+                this.conversationHistory.push({
+                    role: "user",
+                    content: message
+                });
+
+                try {
+                    const possibleEndpoints = [
+                        `${this.endpoint}openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-08-01-preview`,
+                        `${this.endpoint}openai/deployments/gpt-4-mini/chat/completions?api-version=2024-08-01-preview`,
+                        `${this.endpoint}openai/deployments/gpt-4/chat/completions?api-version=2024-08-01-preview`,
+                        `${this.endpoint}openai/deployments/gpt-4o-mini/chat/completions?api-version=2024-06-01`,
+                        `${this.endpoint}openai/deployments/gpt-4-mini/chat/completions?api-version=2024-06-01`,
+                        `${this.endpoint}openai/deployments/gpt-4/chat/completions?api-version=2024-06-01`,
+                        `${this.endpoint}openai/deployments/gpt-35-turbo/chat/completions?api-version=2023-12-01-preview`,
+                    ];
+
+                    if (this.apiUrl) {
+                        possibleEndpoints.unshift(
+                            `${this.apiUrl}/chat/completions?api-version=2024-08-01-preview`,
+                            `${this.apiUrl}/chat/completions?api-version=2024-06-01`
+                        );
+                    }
+
+                    const requestBody = {
+                        messages: [
+                            {
+                                role: "system",
+                                content: "You are a helpful AI assistant for CD Corporation Law Services, specializing in legal education for staff members. Provide clear, professional, and educational responses about legal matters. Always maintain a professional tone and remind users that your responses are for educational purposes only and should not replace professional legal advice."
+                            },
+                            ...this.conversationHistory
+                        ],
+                        max_tokens: 800,
+                        temperature: 0.7
+                    };
+
+                    let lastError = null;
+                    
+                    for (const endpoint of possibleEndpoints) {
+                        try {
+                            console.log(`Trying endpoint: ${endpoint}`);
+                            
+                            const response = await fetch(endpoint, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'api-key': this.apiKey,
+                                    'Ocp-Apim-Subscription-Key': this.apiKey
+                                },
+                                body: JSON.stringify(requestBody)
+                            });
+
+                            console.log(`Response status: ${response.status}`);
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log('Success response:', data);
+                                
+                                let assistantMessage = '';
+                                if (data.choices && data.choices[0] && data.choices[0].message) {
+                                    assistantMessage = data.choices[0].message.content;
+                                } else if (data.message) {
+                                    assistantMessage = data.message;
+                                } else if (data.response) {
+                                    assistantMessage = data.response;
+                                } else {
+                                    assistantMessage = "I received your message but couldn't process it properly. Please try again.";
+                                }
+                                
+                                this.conversationHistory.push({
+                                    role: "assistant",
+                                    content: assistantMessage
+                                });
+
+                                return assistantMessage;
+                            } else {
+                                const errorText = await response.text();
+                                console.log(`Error response: ${errorText}`);
+                                lastError = new Error(`HTTP ${response.status}: ${errorText}`);
+                            }
+                        } catch (endpointError) {
+                            console.log(`Endpoint ${endpoint} failed:`, endpointError);
+                            lastError = endpointError;
+                            continue;
+                        }
+                    }
+                    
+                    throw lastError || new Error('All endpoints failed');
+                    
+                } catch (error) {
+                    console.error('All API calls failed:', error);
+                    this.conversationHistory.pop();
+                    
+                    return `I'm having trouble connecting to the AI service. Please check your configuration or try again later.
+
+Error details: ${error.message}
+
+You can click the ⚙️ button to reconfigure your settings.`;
+                }
+            }
+
+            addMessage(text, sender) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = sender === 'user' ? 'U' : 'AI';
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.textContent = text;
+
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                timeDiv.textContent = new Date().toLocaleTimeString();
+
+                contentDiv.appendChild(timeDiv);
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(contentDiv);
+
+                const welcomeMessage = this.chatMessages.querySelector('.welcome-message');
+                if (welcomeMessage) {
+                    welcomeMessage.remove();
+                }
+
+                this.chatMessages.appendChild(messageDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            showTypingIndicator() {
+                const typingDiv = document.createElement('div');
+                typingDiv.className = 'message bot';
+                typingDiv.id = 'typingIndicator';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.textContent = 'AI';
+
+                const typingContent = document.createElement('div');
+                typingContent.className = 'typing-indicator';
+                typingContent.style.display = 'block';
+
+                const dotsDiv = document.createElement('div');
+                dotsDiv.className = 'typing-dots';
+                
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'typing-dot';
+                    dotsDiv.appendChild(dot);
+                }
+
+                typingContent.appendChild(dotsDiv);
+                typingDiv.appendChild(avatar);
+                typingDiv.appendChild(typingContent);
+
+                this.chatMessages.appendChild(typingDiv);
+                this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+            }
+
+            hideTypingIndicator() {
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+        }
+
+        // Initialize the chat interface when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatInterface();
+        });
+    </script>
+</body>
+</html>
